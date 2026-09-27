@@ -46,10 +46,23 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
                        (results.answer.includes("couldn't find") || 
                         results.answer.includes("not found"));
 
+  const formatSourceName = (source: string): string => {
+    // Convert technical source names to user-friendly names
+    const sourceMap: { [key: string]: string } = {
+      'compounds': 'Compound Records',
+      'clinical_trials': 'Clinical Trial Data',
+      'trial_sites': 'Trial Site Information',
+      'lab_results': 'Laboratory Results',
+      'adverse_events': 'Safety Event Reports',
+      'research_documents': 'Research Documents'
+    };
+    return sourceMap[source] || source;
+  };
+
   return (
     <div className="results-display">
       <div className="answer-section">
-        <h2>Answer</h2>
+        <h2>Intelligence Assessment</h2>
         <div className="answer-content">
           {renderAnswer(results.answer)}
         </div>
@@ -57,7 +70,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
 
       {isEmptyResult && (
         <div className="suggestions-section">
-          <h3>What you can try</h3>
+          <h3>Suggested Questions</h3>
           <ul className="suggestions-list">
             <li>Try another compound identifier or ask about a specific trial</li>
             <li>Ask about safety events, laboratory results, or research topics</li>
@@ -75,12 +88,12 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
 
       {results.evidence.length > 0 && (
         <div className="evidence-section">
-          <h3>Evidence</h3>
+          <h3>Supporting Evidence</h3>
           <div className="evidence-list">
             {results.evidence.map((evidence, index) => (
               <div key={index} className="evidence-item">
                 <div className="evidence-header">
-                  <span className="evidence-source">{evidence.source}</span>
+                  <span className="evidence-source">{formatSourceName(evidence.source)}</span>
                 </div>
                 <p className="evidence-description">{evidence.description}</p>
               </div>

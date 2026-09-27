@@ -59,54 +59,39 @@ class RouterAgent(BaseAgent):
         """Route query to appropriate agent"""
         query_lower = query.lower()
         
-        # Determine query type
+        # Determine query type and return natural routing message
         if "trial" in query_lower and ("enrollment" in query_lower or "phase" in query_lower):
-            return {
-                "answer": "Query routed to Trial Intelligence Agent",
-                "evidence": [],
-                "sources": [],
-                "interpretation": "This query requires trial enrollment analysis",
-                "uncertainty": "Low",
-                "agent_used": "Trial Intelligence Agent",
-                "processing_time_ms": 0
-            }
+            return QueryResponse(
+                answer="I'll help you analyze trial enrollment and phase information.",
+                evidence=[],
+                sources=[],
+                interpretation="This query focuses on clinical trial metrics."
+            )
         elif "compound" in query_lower:
-            return {
-                "answer": "Query routed to Compound Intelligence Agent",
-                "evidence": [],
-                "sources": [],
-                "interpretation": "This query requires compound analysis",
-                "uncertainty": "Low",
-                "agent_used": "Compound Intelligence Agent",
-                "processing_time_ms": 0
-            }
+            return QueryResponse(
+                answer="I'll help you analyze compound information.",
+                evidence=[],
+                sources=[],
+                interpretation="This query focuses on compound intelligence."
+            )
         elif "adverse" in query_lower or "safety" in query_lower or "triage" in query_lower:
-            return {
-                "answer": "Query routed to Safety Intelligence Agent",
-                "evidence": [],
-                "sources": [],
-                "interpretation": "This query requires safety analysis",
-                "uncertainty": "Low",
-                "agent_used": "Safety Intelligence Agent",
-                "processing_time_ms": 0
-            }
+            return QueryResponse(
+                answer="I'll help you analyze safety information and adverse events.",
+                evidence=[],
+                sources=[],
+                interpretation="This query focuses on safety intelligence."
+            )
         elif "research" in query_lower or "literature" in query_lower or "document" in query_lower:
-            return {
-                "answer": "Query routed to Research Document Agent",
-                "evidence": [],
-                "sources": [],
-                "interpretation": "This query requires document retrieval",
-                "uncertainty": "Low",
-                "agent_used": "Research Document Agent",
-                "processing_time_ms": 0
-            }
+            return QueryResponse(
+                answer="I'll help you search research documents and literature.",
+                evidence=[],
+                sources=[],
+                interpretation="This query focuses on research document retrieval."
+            )
         else:
-            return {
-                "answer": "Query routed to General Synthesis Agent",
-                "evidence": [],
-                "sources": [],
-                "interpretation": "This query requires multi-agent synthesis",
-                "uncertainty": "Medium",
-                "agent_used": "General Synthesis Agent",
-                "processing_time_ms": 0
-            }
+            return QueryResponse(
+                answer="I'll help you analyze this question using the available pharmaceutical research data.",
+                evidence=[],
+                sources=[],
+                interpretation="This query may require analysis across multiple data sources."
+            )

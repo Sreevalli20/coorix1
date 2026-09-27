@@ -74,19 +74,56 @@ class SynthesisAgent(BaseAgent):
         
         if not valid_responses:
             return QueryResponse(
-                answer="Unable to process query. No specialist agents available.",
+                answer="I couldn't find sufficient evidence in the available research records to answer this question.",
                 evidence=[],
                 sources=[],
-                interpretation="System error - no agents responded"
+                interpretation="No relevant evidence was found across the available data sources. You may want to try a different question or ask about specific compounds, trials, or research topics."
             )
         
-        # Build synthesized answer
+        # Build synthesized answer with better structure
         answer_parts = [f"**Comprehensive Analysis**\n\n"]
         
-        # Add insights from each agent
+        # Group responses by evidence type for better organization
+        clinical_responses = []
+        compound_responses = []
+        safety_responses = []
+        research_responses = []
+        
         for agent_name, response in valid_responses.items():
             if response and response.answer:
-                answer_parts.append(f"\n{response.answer}")
+                if agent_name == "trial":
+                    clinical_responses.append(response.answer)
+                elif agent_name == "compound":
+                    compound_responses.append(response.answer)
+                elif agent_name == "safety":
+                    safety_responses.append(response.answer)
+                elif agent_name == "research":
+                    research_responses.append(response.answer)
+        
+        # Add organized sections
+        if clinical_responses:
+            answer_parts.append("**Clinical Evidence**")
+            for resp in clinical_responses:
+                answer_parts.append(resp)
+            answer_parts.append("")
+        
+        if compound_responses:
+            answer_parts.append("**Compound Evidence**")
+            for resp in compound_responses:
+                answer_parts.append(resp)
+            answer_parts.append("")
+        
+        if safety_responses:
+            answer_parts.append("**Safety Evidence**")
+            for resp in safety_responses:
+                answer_parts.append(resp)
+            answer_parts.append("")
+        
+        if research_responses:
+            answer_parts.append("**Research Evidence**")
+            for resp in research_responses:
+                answer_parts.append(resp)
+            answer_parts.append("")
         
         # Combine all evidence
         synthesized_evidence = []
@@ -99,14 +136,21 @@ class SynthesisAgent(BaseAgent):
         # Deduplicate sources
         unique_sources = list(set(all_sources))
         
-        # Build interpretation
-        num_agents = len(valid_responses)
-        interpretation = f"Analysis based on {num_agents} data source(s). "
+        # Build interpretation based on what was found
+        interpretation_parts = []
+        if clinical_responses:
+            interpretation_parts.append("Clinical trial evidence was available.")
+        if compound_responses:
+            interpretation_parts.append("Compound evidence was available.")
+        if safety_responses:
+            interpretation_parts.append("Safety evidence was available.")
+        if research_responses:
+            interpretation_parts.append("Research documentation was available.")
         
-        if num_agents > 1:
-            interpretation += "Multi-source analysis provides comprehensive coverage."
+        if interpretation_parts:
+            interpretation = " ".join(interpretation_parts)
         else:
-            interpretation += "Single source analysis provided."
+            interpretation = "Limited evidence was available for this query."
         
         answer = "\n".join(answer_parts)
         
@@ -136,10 +180,10 @@ class SynthesisAgent(BaseAgent):
         
         if not compound:
             return QueryResponse(
-                answer=f"I couldn't find {compound_id} in the available research records.",
+                answer=f"I couldn't find verified records matching {compound_id} in the available research evidence.",
                 evidence=[],
                 sources=[],
-                interpretation="No verified evidence was found for this compound."
+                interpretation="No verified evidence was found for this compound. You may want to try another compound identifier or ask about available compounds."
             )
         
         query = f"Tell me everything about compound {compound_id}"
@@ -167,21 +211,32 @@ class SynthesisAgent(BaseAgent):
         research_agent = ResearchAgent()
         research_response = research_agent.process_query(query)
         
-        # Build comprehensive profile
+        # Build comprehensive profile with better structure
         answer_parts = [
             f"**Comprehensive Compound Profile**",
             f"**Compound:** {compound_id}",
-            compound_response.answer if compound_response else "No compound information available"
         ]
         
-        if safety_insights:
-            answer_parts.append("\n\n**Safety Profile:**")
-            for insight in safety_insights:
-                answer_parts.append(f"- {insight}")
+        # Add compound information
+        if compound_response and compound_response.answer:
+            answer_parts.append(compound_response.answer)
         
+        # Add safety information
+        if safety_insights:
+            answer_parts.append(f"\n**Safety Profile**")
+            for insight in safety_insights:
+                answer_parts.append(f"\n{insight}")
+        else:
+            answer_parts.append(f"\n**Safety Profile**")
+            answer_parts.append("No associated trial safety data was found in the available evidence.")
+        
+        # Add research documentation
         if research_response and research_response.answer:
-            answer_parts.append("\n\n**Research Documentation:**")
+            answer_parts.append(f"\n**Research Documentation**")
             answer_parts.append(research_response.answer)
+        else:
+            answer_parts.append(f"\n**Research Documentation**")
+            answer_parts.append("No research documents were found for this compound in the available evidence.")
         
         answer = "\n".join(answer_parts)
         
@@ -199,9 +254,23 @@ class SynthesisAgent(BaseAgent):
         if research_response:
             all_sources.extend(research_response.sources)
         
+        # Build interpretation
+        interpretation_parts = []
+        if compound_response:
+            interpretation_parts.append("Compound information is available.")
+        if safety_insights:
+            interpretation_parts.append(f"Safety data from {len(safety_insights)} trial(s) is available.")
+        if research_response:
+            interpretation_parts.append("Research documentation is available.")
+        
+        if interpretation_parts:
+            interpretation = " ".join(interpretation_parts)
+        else:
+            interpretation = "Limited evidence was available for this compound profile."
+        
         return QueryResponse(
             answer=answer,
             evidence=all_evidence,
             sources=all_sources,
-            interpretation="Comprehensive compound profile synthesized from multiple data sources"
+            interpretation=interpretation
         )

@@ -57,7 +57,7 @@ class ResearchAgent(BaseAgent):
                 answer=f"I couldn't find {compound_id} in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="No verified evidence was found for this compound."
+                interpretation="No verified evidence was found for this compound. You may want to verify the compound identifier or ask about available compounds."
             )
         
         # Get research documents
@@ -65,10 +65,10 @@ class ResearchAgent(BaseAgent):
         
         if not documents:
             return QueryResponse(
-                answer=f"No research documents found for compound {compound_id}.",
+                answer=f"No research documents were found for compound {compound_id} ({compound['compound_name']}).",
                 evidence=[],
                 sources=[compound_id],
-                interpretation=f"No research documentation available for {compound_id}"
+                interpretation=f"While the compound record exists, no research documentation is available in the current evidence base. You may want to ask about clinical trials or laboratory results for this compound instead."
             )
         
         # Build evidence
@@ -104,21 +104,30 @@ class ResearchAgent(BaseAgent):
         
         # Build answer
         answer_parts = [
-            f"**Research Findings**",
-            f"**Relevant Evidence:** Found {len(documents)} research documents for compound {compound_id} ({compound['compound_name']}).",
-            f"Target protein: {compound['target_protein']}, Therapeutic area: {compound['therapeutic_area']}."
+            f"**Research Documentation for {compound_id}**",
+            f"**Compound:** {compound_id} ({compound['compound_name']})",
+            f"**Target Protein:** {compound['target_protein']}",
+            f"**Therapeutic Area:** {compound['therapeutic_area']}",
+            f"\n**Available Research:** {len(documents)} document(s) found.",
         ]
         
         # Add document type summary
         doc_types = self._summarize_document_types(documents)
         if doc_types:
-            answer_parts.append(f"Document types: {', '.join(f'{k}: {v}' for k, v in doc_types.items())}.")
+            answer_parts.append(f"\n**Document Types:**")
+            for doc_type, count in sorted(doc_types.items()):
+                answer_parts.append(f"- {doc_type}: {count} document(s)")
+        
+        # Add specific documents
+        answer_parts.append(f"\n**Research Documents:**")
+        for doc in documents[:5]:
+            answer_parts.append(f"- {doc['doc_id']}: {doc['title']} ({doc['doc_type']}) by {doc['author']}")
         
         # Add key insights from documents
         if documents:
             key_insights = self._extract_key_insights(documents)
             if key_insights:
-                answer_parts.append("\n**Key Takeaways:**")
+                answer_parts.append(f"\n**Key Takeaways from Research:**")
                 for insight in key_insights[:3]:
                     answer_parts.append(f"- {insight}")
         
@@ -130,7 +139,7 @@ class ResearchAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation="Research documentation provides comprehensive compound analysis"
+            interpretation=f"Research documentation includes {len(documents)} document(s) covering various aspects of {compound_id}."
         )
     
     def _handle_target_research_query(self, query: str) -> QueryResponse:
@@ -154,10 +163,10 @@ class ResearchAgent(BaseAgent):
             
             if not search_results:
                 return QueryResponse(
-                    answer="No relevant research documents found for your query.",
+                    answer="No relevant research documents were found for your query.",
                     evidence=[],
                     sources=[],
-                    interpretation="No matching documents found"
+                    interpretation="No matching documents were found in the available research corpus. You may want to try different search terms or ask about specific compounds or trials."
                 )
             
             return self._format_search_results(search_results, query)
@@ -167,10 +176,10 @@ class ResearchAgent(BaseAgent):
         
         if not search_results:
             return QueryResponse(
-                answer=f"No research documents found mentioning {target_protein}.",
+                answer=f"No research documents were found mentioning {target_protein}.",
                 evidence=[],
                 sources=[],
-                interpretation=f"No research documentation for {target_protein}"
+                interpretation=f"No research documentation for {target_protein} was found in the available evidence. You may want to ask about compounds targeting this protein or try a different target."
             )
         
         return self._format_search_results(search_results, query)
@@ -181,10 +190,10 @@ class ResearchAgent(BaseAgent):
         
         if not search_results:
             return QueryResponse(
-                answer=f"No research documents found for {therapeutic_area}.",
+                answer=f"No research documents were found for {therapeutic_area}.",
                 evidence=[],
                 sources=[],
-                interpretation=f"No research documentation for {therapeutic_area}"
+                interpretation=f"No research documentation for {therapeutic_area} was found in the available evidence. You may want to try a different therapeutic area or ask about specific compounds in this area."
             )
         
         return self._format_search_results(search_results, f"{therapeutic_area} research")
@@ -213,10 +222,10 @@ class ResearchAgent(BaseAgent):
         
         if not search_results:
             return QueryResponse(
-                answer="No research documents found regarding cardiotoxicity or toxicity.",
+                answer="No research documents were found regarding cardiotoxicity or toxicity in the available research corpus.",
                 evidence=[],
                 sources=[],
-                interpretation="No toxicity-related research found"
+                interpretation="No toxicity-related research was found. You may want to try different search terms or ask about specific compounds where toxicity data might be available."
             )
         
         # Add specific cardiotoxicity analysis
@@ -226,12 +235,24 @@ class ResearchAgent(BaseAgent):
                "toxicity" in doc.get("full_text", "").lower()
         ]
         
+        answer_parts = [
+            f"**Toxicity Research**",
+        ]
+        
         if cardiotoxicity_docs:
-            answer = f"**Research Findings**\n\nI found {len(cardiotoxicity_docs)} research documents discussing cardiotoxicity/toxicity. "
+            answer_parts.append(f"I found {len(cardiotoxicity_docs)} research document(s) discussing cardiotoxicity/toxicity.")
             if target_protein:
-                answer += f"Specifically related to {target_protein} inhibitors."
+                answer_parts.append(f"Specifically related to {target_protein} inhibitors.")
         else:
-            answer = f"**Research Findings**\n\nI found {len(search_results)} research documents that may be relevant to your toxicity query."
+            answer_parts.append(f"I found {len(search_results)} research document(s) that may be relevant to your toxicity query.")
+        
+        answer_parts.append(f"\n**Relevant Documents:**")
+        for doc in search_results[:3]:
+            answer_parts.append(f"- {doc['doc_id']}: {doc['title']}")
+            if doc.get("snippet"):
+                answer_parts.append(f"  {doc['snippet'][:100]}...")
+        
+        answer = "\n".join(answer_parts)
         
         evidence = [
             self.create_evidence(
@@ -260,7 +281,7 @@ class ResearchAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation="Research documents provide toxicity insights"
+            interpretation=f"Research documents provide toxicity insights with {len(cardiotoxicity_docs)} document(s) specifically discussing cardiotoxicity."
         )
     
     def _handle_literature_review_query(self, query: str) -> QueryResponse:
@@ -276,10 +297,10 @@ class ResearchAgent(BaseAgent):
         
         if not literature_reviews:
             return QueryResponse(
-                answer="No literature review documents found in the available research records.",
+                answer="No literature review documents were found in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="No literature reviews available"
+                interpretation="No literature reviews are available in the current evidence base. You may want to ask about other document types or specific research topics."
             )
         
         # Search within literature reviews
@@ -314,8 +335,18 @@ class ResearchAgent(BaseAgent):
             )
         ]
         
-        answer = f"**Research Findings**\n\nI found {len(literature_reviews)} literature review documents. "
-        answer += "Topics include: " + ", ".join([doc["tags"] for doc in literature_reviews[:5]])
+        answer_parts = [
+            f"**Literature Reviews**",
+            f"I found {len(literature_reviews)} literature review document(s) in the available research records.",
+            f"\n**Available Literature Reviews:**"
+        ]
+        
+        for doc in literature_reviews[:5]:
+            answer_parts.append(f"- {doc['doc_id']}: {doc['title']} by {doc['author']}")
+            if doc["tags"]:
+                answer_parts.append(f"  Tags: {doc['tags']}")
+        
+        answer = "\n".join(answer_parts)
         
         sources = [doc["doc_id"] for doc in literature_reviews]
         
@@ -323,7 +354,7 @@ class ResearchAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation="Literature reviews available for various topics"
+            interpretation=f"Literature reviews are available covering various topics across {len(literature_reviews)} document(s)."
         )
     
     def _handle_document_search_query(self, query: str) -> QueryResponse:
@@ -332,10 +363,10 @@ class ResearchAgent(BaseAgent):
         
         if not search_results:
             return QueryResponse(
-                answer="No research documents found matching your query.",
+                answer="No research documents were found matching your query in the available research corpus.",
                 evidence=[],
                 sources=[],
-                interpretation="No matching documents found"
+                interpretation="No matching documents were found. You may want to try different search terms or ask about specific compounds, trials, or therapeutic areas."
             )
         
         return self._format_search_results(search_results, query)

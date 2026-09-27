@@ -73,14 +73,26 @@ class TrialAgent(BaseAgent):
             evidence = [
                 self.create_evidence(
                     source="clinical_trials",
-                    data={"total_trials": len(trials), "below_threshold": len(trials_below)},
+                    data={"total_trials": len(trials), "below_threshold": len(trials_below), "trials": trials_below},
                     confidence=0.95,
-                    description=f"Found {len(trials_below)} {phase} {therapeutic_area} trials below {threshold}% enrollment"
+                    description=f"{phase} {therapeutic_area} trials below {threshold}% enrollment"
                 )
             ]
             
-            answer = f"**Trial Findings**\n\nI found {len(trials_below)} {phase} {therapeutic_area} trials below {threshold}% enrollment out of {len(trials)} total {phase} {therapeutic_area} trials."
+            answer_parts = [
+                f"**Enrollment Analysis**",
+                f"I found {len(trials_below)} {phase} {therapeutic_area} trial(s) below {threshold}% enrollment out of {len(trials)} total {phase} {therapeutic_area} trials.",
+                f"\n**Trials Below Target:**"
+            ]
             
+            for trial in trials_below[:5]:
+                enrollment_pct = trial.get("enrollment_pct", 0)
+                answer_parts.append(f"- {trial['trial_id']}: {enrollment_pct:.1f}% enrollment (Target: {trial['target_enrollment']}, Actual: {trial['actual_enrollment']}) - Status: {trial['status']}")
+            
+            if len(trials_below) > 5:
+                answer_parts.append(f"- ... and {len(trials_below) - 5} more trial(s)")
+            
+            answer = "\n".join(answer_parts)
             sources = [t["trial_id"] for t in trials_below]
             
         else:
@@ -89,20 +101,35 @@ class TrialAgent(BaseAgent):
             evidence = [
                 self.create_evidence(
                     source="clinical_trials",
-                    data={"total_below_threshold": len(trials)},
+                    data={"total_below_threshold": len(trials), "trials": trials},
                     confidence=0.90,
-                    description=f"Found {len(trials)} trials below {threshold}% enrollment"
+                    description=f"Trials below {threshold}% enrollment"
                 )
             ]
             
-            answer = f"**Trial Findings**\n\nI found {len(trials)} trials below {threshold}% enrollment across all phases and therapeutic areas."
+            answer_parts = [
+                f"**Enrollment Analysis**",
+                f"I found {len(trials)} trial(s) below {threshold}% enrollment across all phases and therapeutic areas.",
+                f"\n**Trials Below Target:**"
+            ]
+            
+            for trial in trials[:5]:
+                enrollment_pct = trial.get("enrollment_pct", 0)
+                answer_parts.append(f"- {trial['trial_id']} ({trial['trial_phase']}, {trial['therapeutic_area']}): {enrollment_pct:.1f}% enrollment - Status: {trial['status']}")
+            
+            if len(trials) > 5:
+                answer_parts.append(f"- ... and {len(trials) - 5} more trial(s)")
+            
+            answer = "\n".join(answer_parts)
             sources = [t["trial_id"] for t in trials]
+        
+        interpretation = f"These trials may require recruitment intervention to meet enrollment targets. {len(trials_below if phase and therapeutic_area else trials)} trial(s) are below the {threshold}% threshold."
         
         return QueryResponse(
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation="These trials may require recruitment intervention to meet enrollment targets."
+            interpretation=interpretation
         )
     
     def _handle_phase_query(self, query: str) -> QueryResponse:
@@ -118,42 +145,73 @@ class TrialAgent(BaseAgent):
         
         if not phase:
             return QueryResponse(
-                answer="Please specify which clinical trial phase you're interested in (Phase I, II, III, or IV).",
+                answer="I can help you analyze trials by phase. Please specify which clinical trial phase you're interested in (Phase I, II, III, or IV).",
                 evidence=[],
                 sources=[],
-                interpretation="Query requires phase specification"
+                interpretation="This query requires a specific phase to provide relevant trial information."
             )
         
         # Get trials by phase
         query_sql = "SELECT * FROM clinical_trials WHERE trial_phase = ?"
         trials = db.execute_query(query_sql, (phase,))
         
+        if not trials:
+            return QueryResponse(
+                answer=f"I couldn't find any {phase} trials in the available research records.",
+                evidence=[],
+                sources=[],
+                interpretation=f"No evidence was found for {phase} trials."
+            )
+        
         # Calculate statistics
         total_trials = len(trials)
         status_counts = {}
+        therapeutic_areas = {}
+        
         for trial in trials:
             status = trial["status"]
             status_counts[status] = status_counts.get(status, 0) + 1
+            
+            area = trial["therapeutic_area"]
+            therapeutic_areas[area] = therapeutic_areas.get(area, 0) + 1
         
         evidence = [
             self.create_evidence(
                 source="clinical_trials",
                 data={
                     "total_trials": total_trials,
-                    "status_breakdown": status_counts
+                    "status_breakdown": status_counts,
+                    "therapeutic_areas": therapeutic_areas
                 },
                 confidence=0.95,
-                description=f"Phase {phase} trial statistics"
+                description=f"{phase} trial statistics"
             )
         ]
         
-        answer = f"**Trial Findings**\n\nI found {total_trials} {phase} trials. Status breakdown: {', '.join(f'{k}: {v}' for k, v in status_counts.items())}."
+        answer_parts = [
+            f"**Phase Analysis**",
+            f"I found {total_trials} {phase} trial(s) in the available research records.",
+            f"\n**Status Distribution:**",
+        ]
+        
+        for status, count in sorted(status_counts.items()):
+            answer_parts.append(f"- {status}: {count} trial(s)")
+        
+        answer_parts.append(f"\n**Therapeutic Areas:**")
+        for area, count in sorted(therapeutic_areas.items()):
+            answer_parts.append(f"- {area}: {count} trial(s)")
+        
+        answer_parts.append(f"\n**Sample Trials:**")
+        for trial in trials[:5]:
+            answer_parts.append(f"- {trial['trial_id']}: {trial['therapeutic_area']} - Status: {trial['status']}")
+        
+        answer = "\n".join(answer_parts)
         
         return QueryResponse(
             answer=answer,
             evidence=evidence,
             sources=[t["trial_id"] for t in trials[:10]],
-            interpretation="Phase distribution shows current portfolio status"
+            interpretation=f"{phase} includes {total_trials} trial(s) across {len(therapeutic_areas)} therapeutic area(s)."
         )
     
     def _handle_status_query(self, query: str) -> QueryResponse:
@@ -178,20 +236,33 @@ class TrialAgent(BaseAgent):
                     )
                 ]
                 
-                answer = f"**Trial Findings**\n\n**Trial:** {trial_id}\n**Status:** {trial['status']}\n**Target Enrollment:** {trial['target_enrollment']}\n**Actual Enrollment:** {trial['actual_enrollment']}"
+                enrollment_pct = (trial['actual_enrollment'] / trial['target_enrollment'] * 100) if trial['target_enrollment'] > 0 else 0
+                
+                answer_parts = [
+                    f"**Trial Status**",
+                    f"**Trial:** {trial_id}",
+                    f"**Status:** {trial['status']}",
+                    f"**Phase:** {trial['trial_phase']}",
+                    f"**Therapeutic Area:** {trial['therapeutic_area']}",
+                    f"**Enrollment:** {trial['actual_enrollment']} / {trial['target_enrollment']} ({enrollment_pct:.1f}%)",
+                    f"**Primary Endpoint:** {trial['primary_endpoint']}",
+                    f"**Sponsor:** {trial['sponsor']}"
+                ]
+                
+                answer = "\n".join(answer_parts)
                 
                 return QueryResponse(
                     answer=answer,
                     evidence=evidence,
                     sources=[trial_id],
-                    interpretation="Trial status reflects current operational state"
+                    interpretation=f"Trial {trial_id} is currently {trial['status']} with {enrollment_pct:.1f}% enrollment achieved."
                 )
             else:
                 return QueryResponse(
                     answer=f"I couldn't find trial {trial_id} in the available research records.",
                     evidence=[],
                     sources=[],
-                    interpretation="No verified evidence was found for this trial."
+                    interpretation="No verified evidence was found for this trial. You may want to verify the trial identifier or ask about available trials."
                 )
         
         # General status query
@@ -209,13 +280,21 @@ class TrialAgent(BaseAgent):
             )
         ]
         
-        answer = f"**Trial Findings**\n\nCurrent trial status distribution: {', '.join(f'{k}: {v}' for k, v in status_summary.items())}."
+        answer_parts = [
+            f"**Trial Status Overview**",
+            f"Current trial status distribution across the portfolio:",
+        ]
+        
+        for status, count in sorted(status_summary.items()):
+            answer_parts.append(f"- {status}: {count} trial(s)")
+        
+        answer = "\n".join(answer_parts)
         
         return QueryResponse(
             answer=answer,
             evidence=evidence,
             sources=[],
-            interpretation="Status distribution shows portfolio health"
+            interpretation=f"The portfolio includes {sum(status_summary.values())} trials across {len(status_summary)} different status categories."
         )
     
     def _handle_general_trial_query(self, query: str) -> QueryResponse:
