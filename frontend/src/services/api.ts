@@ -1,4 +1,4 @@
-import { QueryRequest, QueryResponse, SystemStatus } from '../types';
+import { QueryRequest, QueryResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -18,14 +18,10 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
+      throw new Error('Unable to process your request. Please try again.');
     }
 
     return response.json();
-  }
-
-  async healthCheck(): Promise<SystemStatus> {
-    return this.request<SystemStatus>('/health');
   }
 
   async processQuery(query: string, userRole: string = 'user'): Promise<QueryResponse> {

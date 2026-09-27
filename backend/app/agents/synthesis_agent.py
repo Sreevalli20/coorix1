@@ -77,10 +77,7 @@ class SynthesisAgent(BaseAgent):
                 answer="Unable to process query. No specialist agents available.",
                 evidence=[],
                 sources=[],
-                interpretation="System error - no agents responded",
-                uncertainty="High",
-                agent_used=self.name,
-                processing_time_ms=0
+                interpretation="System error - no agents responded"
             )
         
         # Build synthesized answer
@@ -102,15 +99,6 @@ class SynthesisAgent(BaseAgent):
         # Deduplicate sources
         unique_sources = list(set(all_sources))
         
-        # Determine overall uncertainty
-        uncertainties = [r.uncertainty for r in valid_responses.values() if r]
-        if "High" in uncertainties:
-            overall_uncertainty = "High"
-        elif "Medium" in uncertainties:
-            overall_uncertainty = "Medium"
-        else:
-            overall_uncertainty = "Low"
-        
         # Build interpretation
         num_agents = len(valid_responses)
         interpretation = f"Analysis based on {num_agents} data source(s). "
@@ -126,10 +114,7 @@ class SynthesisAgent(BaseAgent):
             answer=answer,
             evidence=synthesized_evidence,
             sources=unique_sources,
-            interpretation=interpretation,
-            uncertainty=overall_uncertainty,
-            agent_used=self.name,
-            processing_time_ms=sum(r.processing_time_ms for r in valid_responses.values() if r)
+            interpretation=interpretation
         )
     
     def synthesize_compound_profile(self, compound_id: str) -> QueryResponse:
@@ -154,10 +139,7 @@ class SynthesisAgent(BaseAgent):
                 answer=f"I couldn't find {compound_id} in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="No verified evidence was found for this compound.",
-                uncertainty="High",
-                agent_used=self.name,
-                processing_time_ms=50.0
+                interpretation="No verified evidence was found for this compound."
             )
         
         query = f"Tell me everything about compound {compound_id}"
@@ -221,8 +203,5 @@ class SynthesisAgent(BaseAgent):
             answer=answer,
             evidence=all_evidence,
             sources=all_sources,
-            interpretation="Comprehensive compound profile synthesized from multiple data sources",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=500.0
+            interpretation="Comprehensive compound profile synthesized from multiple data sources"
         )

@@ -142,9 +142,6 @@ class QueryResponse(BaseModel):
     evidence: List[Evidence] = []
     sources: List[str] = []
     interpretation: str
-    uncertainty: str
-    agent_used: str
-    processing_time_ms: float
 
 
 # Agent Status Models
@@ -153,11 +150,3 @@ class AgentStatus(BaseModel):
     status: str
     last_activity: Optional[datetime] = None
     queries_processed: int = 0
-
-
-class SystemStatus(BaseModel):
-    status: str
-    database_connected: bool
-    document_index_loaded: bool
-    agents_active: List[str]
-    memory_usage_mb: float

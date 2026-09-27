@@ -57,10 +57,7 @@ class ResearchAgent(BaseAgent):
                 answer=f"I couldn't find {compound_id} in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="No verified evidence was found for this compound.",
-                uncertainty="High",
-                agent_used=self.name,
-                processing_time_ms=50.0
+                interpretation="No verified evidence was found for this compound."
             )
         
         # Get research documents
@@ -71,10 +68,7 @@ class ResearchAgent(BaseAgent):
                 answer=f"No research documents found for compound {compound_id}.",
                 evidence=[],
                 sources=[compound_id],
-                interpretation=f"No research documentation available for {compound_id}",
-                uncertainty="Medium",
-                agent_used=self.name,
-                processing_time_ms=80.0
+                interpretation=f"No research documentation available for {compound_id}"
             )
         
         # Build evidence
@@ -136,10 +130,7 @@ class ResearchAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation="Research documentation provides comprehensive compound analysis",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=200.0
+            interpretation="Research documentation provides comprehensive compound analysis"
         )
     
     def _handle_target_research_query(self, query: str) -> QueryResponse:
@@ -166,10 +157,7 @@ class ResearchAgent(BaseAgent):
                     answer="No relevant research documents found for your query.",
                     evidence=[],
                     sources=[],
-                    interpretation="No matching documents found",
-                    uncertainty="Medium",
-                    agent_used=self.name,
-                    processing_time_ms=100.0
+                    interpretation="No matching documents found"
                 )
             
             return self._format_search_results(search_results, query)
@@ -182,10 +170,7 @@ class ResearchAgent(BaseAgent):
                 answer=f"No research documents found mentioning {target_protein}.",
                 evidence=[],
                 sources=[],
-                interpretation=f"No research documentation for {target_protein}",
-                uncertainty="Medium",
-                agent_used=self.name,
-                processing_time_ms=100.0
+                interpretation=f"No research documentation for {target_protein}"
             )
         
         return self._format_search_results(search_results, query)
@@ -199,10 +184,7 @@ class ResearchAgent(BaseAgent):
                 answer=f"No research documents found for {therapeutic_area}.",
                 evidence=[],
                 sources=[],
-                interpretation=f"No research documentation for {therapeutic_area}",
-                uncertainty="Medium",
-                agent_used=self.name,
-                processing_time_ms=100.0
+                interpretation=f"No research documentation for {therapeutic_area}"
             )
         
         return self._format_search_results(search_results, f"{therapeutic_area} research")
@@ -234,10 +216,7 @@ class ResearchAgent(BaseAgent):
                 answer="No research documents found regarding cardiotoxicity or toxicity.",
                 evidence=[],
                 sources=[],
-                interpretation="No toxicity-related research found",
-                uncertainty="Medium",
-                agent_used=self.name,
-                processing_time_ms=100.0
+                interpretation="No toxicity-related research found"
             )
         
         # Add specific cardiotoxicity analysis
@@ -281,10 +260,7 @@ class ResearchAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation="Research documents provide toxicity insights",
-            uncertainty="Low" if cardiotoxicity_docs else "Medium",
-            agent_used=self.name,
-            processing_time_ms=150.0
+            interpretation="Research documents provide toxicity insights"
         )
     
     def _handle_literature_review_query(self, query: str) -> QueryResponse:
@@ -303,10 +279,7 @@ class ResearchAgent(BaseAgent):
                 answer="No literature review documents found in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="No literature reviews available",
-                uncertainty="Medium",
-                agent_used=self.name,
-                processing_time_ms=80.0
+                interpretation="No literature reviews available"
             )
         
         # Search within literature reviews
@@ -350,10 +323,7 @@ class ResearchAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation="Literature reviews available for various topics",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=120.0
+            interpretation="Literature reviews available for various topics"
         )
     
     def _handle_document_search_query(self, query: str) -> QueryResponse:
@@ -365,10 +335,7 @@ class ResearchAgent(BaseAgent):
                 answer="No research documents found matching your query.",
                 evidence=[],
                 sources=[],
-                interpretation="No matching documents found",
-                uncertainty="Medium",
-                agent_used=self.name,
-                processing_time_ms=100.0
+                interpretation="No matching documents found"
             )
         
         return self._format_search_results(search_results, query)
@@ -409,10 +376,7 @@ class ResearchAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation="Document retrieval provides relevant research materials",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=150.0
+            interpretation="Document retrieval provides relevant research materials"
         )
     
     def _summarize_document_types(self, documents: List[Dict]) -> Dict[str, int]:

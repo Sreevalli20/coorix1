@@ -16,17 +16,6 @@ export interface QueryResponse {
   evidence: Evidence[];
   sources: string[];
   interpretation: string;
-  uncertainty: string;
-  agent_used: string;
-  processing_time_ms: number;
-}
-
-export interface SystemStatus {
-  status: string;
-  database_connected: boolean;
-  document_index_loaded: boolean;
-  agents_active: string[];
-  memory_usage_mb: number;
 }
 
 // Domain Types

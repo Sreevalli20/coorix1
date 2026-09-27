@@ -55,10 +55,7 @@ class CompoundAgent(BaseAgent):
                 answer=f"I couldn't find {compound_id} in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="No verified evidence was found for this compound, so there isn't enough information to provide a clinical, laboratory, safety, or research summary.",
-                uncertainty="High",
-                agent_used=self.name,
-                processing_time_ms=50.0
+                interpretation="No verified evidence was found for this compound, so there isn't enough information to provide a clinical, laboratory, safety, or research summary."
             )
         
         # Get related data
@@ -140,10 +137,7 @@ class CompoundAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=[compound_id] + [t["trial_id"] for t in trials[:5]] + [d["doc_id"] for d in documents[:3]],
-            interpretation="Summary of available evidence for this compound.",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=200.0
+            interpretation="Summary of available evidence for this compound."
         )
     
     def _handle_target_protein_query(self, query: str) -> QueryResponse:
@@ -166,10 +160,7 @@ class CompoundAgent(BaseAgent):
                 answer="Please specify which target protein you're interested in (e.g., JAK2, BTK, HER2).",
                 evidence=[],
                 sources=[],
-                interpretation="Query requires target protein specification",
-                uncertainty="High",
-                agent_used=self.name,
-                processing_time_ms=50.0
+                interpretation="Query requires target protein specification"
             )
         
         compounds = db.get_compounds_by_target(target_protein)
@@ -179,10 +170,7 @@ class CompoundAgent(BaseAgent):
                 answer=f"No compounds found targeting {target_protein}.",
                 evidence=[],
                 sources=[],
-                interpretation=f"No compounds target {target_protein}",
-                uncertainty="Medium",
-                agent_used=self.name,
-                processing_time_ms=80.0
+                interpretation=f"No compounds target {target_protein}"
             )
         
         # Analyze compounds
@@ -212,10 +200,7 @@ class CompoundAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation=f"Portfolio shows {len(compounds)} compounds targeting {target_protein}",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=150.0
+            interpretation=f"Portfolio shows {len(compounds)} compounds targeting {target_protein}"
         )
     
     def _handle_therapeutic_area_query(self, query: str) -> QueryResponse:
@@ -236,10 +221,7 @@ class CompoundAgent(BaseAgent):
                 answer="Please specify which therapeutic area you're interested in (e.g., Oncology, Cardiology, Neurology).",
                 evidence=[],
                 sources=[],
-                interpretation="Query requires therapeutic area specification",
-                uncertainty="High",
-                agent_used=self.name,
-                processing_time_ms=50.0
+                interpretation="Query requires therapeutic area specification"
             )
         
         query_sql = "SELECT * FROM compounds WHERE therapeutic_area = ?"
@@ -250,10 +232,7 @@ class CompoundAgent(BaseAgent):
                 answer=f"No compounds found for {therapeutic_area}.",
                 evidence=[],
                 sources=[],
-                interpretation=f"No compounds in {therapeutic_area}",
-                uncertainty="Medium",
-                agent_used=self.name,
-                processing_time_ms=80.0
+                interpretation=f"No compounds in {therapeutic_area}"
             )
         
         # Analyze compounds
@@ -283,10 +262,7 @@ class CompoundAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation=f"Portfolio shows {len(compounds)} compounds in {therapeutic_area}",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=150.0
+            interpretation=f"Portfolio shows {len(compounds)} compounds in {therapeutic_area}"
         )
     
     def _handle_general_compound_query(self, query: str) -> QueryResponse:
@@ -322,8 +298,5 @@ class CompoundAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=[],
-            interpretation="Portfolio shows balanced therapeutic area distribution",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=100.0
+            interpretation="Portfolio shows balanced therapeutic area distribution"
         )

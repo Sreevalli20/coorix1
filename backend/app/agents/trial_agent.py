@@ -102,10 +102,7 @@ class TrialAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation="These trials may require recruitment intervention to meet enrollment targets.",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=150.0
+            interpretation="These trials may require recruitment intervention to meet enrollment targets."
         )
     
     def _handle_phase_query(self, query: str) -> QueryResponse:
@@ -124,10 +121,7 @@ class TrialAgent(BaseAgent):
                 answer="Please specify which clinical trial phase you're interested in (Phase I, II, III, or IV).",
                 evidence=[],
                 sources=[],
-                interpretation="Query requires phase specification",
-                uncertainty="High",
-                agent_used=self.name,
-                processing_time_ms=50.0
+                interpretation="Query requires phase specification"
             )
         
         # Get trials by phase
@@ -159,10 +153,7 @@ class TrialAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=[t["trial_id"] for t in trials[:10]],
-            interpretation="Phase distribution shows current portfolio status",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=120.0
+            interpretation="Phase distribution shows current portfolio status"
         )
     
     def _handle_status_query(self, query: str) -> QueryResponse:
@@ -193,20 +184,14 @@ class TrialAgent(BaseAgent):
                     answer=answer,
                     evidence=evidence,
                     sources=[trial_id],
-                    interpretation="Trial status reflects current operational state",
-                    uncertainty="Low",
-                    agent_used=self.name,
-                    processing_time_ms=80.0
+                    interpretation="Trial status reflects current operational state"
                 )
             else:
                 return QueryResponse(
                     answer=f"I couldn't find trial {trial_id} in the available research records.",
                     evidence=[],
                     sources=[],
-                    interpretation="No verified evidence was found for this trial.",
-                    uncertainty="High",
-                    agent_used=self.name,
-                    processing_time_ms=50.0
+                    interpretation="No verified evidence was found for this trial."
                 )
         
         # General status query
@@ -230,10 +215,7 @@ class TrialAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=[],
-            interpretation="Status distribution shows portfolio health",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=100.0
+            interpretation="Status distribution shows portfolio health"
         )
     
     def _handle_general_trial_query(self, query: str) -> QueryResponse:
@@ -242,8 +224,5 @@ class TrialAgent(BaseAgent):
             answer="I can help you with trial enrollment analysis, phase-specific information, and trial status. Please specify what you'd like to know about clinical trials.",
             evidence=[],
             sources=[],
-            interpretation="General trial information request",
-            uncertainty="Medium",
-            agent_used=self.name,
-            processing_time_ms=50.0
+            interpretation="General trial information request"
         )

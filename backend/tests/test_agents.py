@@ -51,12 +51,9 @@ class TestTrialAgent:
         query = "Which Phase II oncology trials are below 60% enrollment?"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Trial Intelligence Agent"
         assert "Phase II" in response.answer
         assert "oncology" in response.answer.lower()
         assert len(response.evidence) > 0
-        assert response.uncertainty in ["Low", "Medium", "High"]
-        assert response.processing_time_ms > 0
     
     def test_enrollment_query_general(self, setup_database):
         """Test general enrollment query"""
@@ -64,7 +61,6 @@ class TestTrialAgent:
         query = "Find trials below 60% enrollment"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Trial Intelligence Agent"
         assert "enrollment" in response.answer.lower()
         assert len(response.evidence) > 0
     
@@ -74,7 +70,6 @@ class TestTrialAgent:
         query = "Show me Phase I trials"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Trial Intelligence Agent"
         assert "Phase I" in response.answer
         assert len(response.evidence) > 0
     
@@ -84,7 +79,7 @@ class TestTrialAgent:
         query = "What is the status of trials?"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Trial Intelligence Agent"
+
         assert len(response.evidence) > 0
     
     def test_general_trial_query(self, setup_database):
@@ -93,10 +88,10 @@ class TestTrialAgent:
         query = "Tell me about clinical trials"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Trial Intelligence Agent"
+
         # General queries may not return evidence, just validate response structure
         assert response.answer is not None
-        assert response.uncertainty in ["Low", "Medium", "High"]
+
 
 
 class TestCompoundAgent:
@@ -115,9 +110,9 @@ class TestCompoundAgent:
         query = "Tell me about compound CMP-0001"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Compound Intelligence Agent"
+
         assert len(response.evidence) > 0
-        assert response.uncertainty in ["Low", "Medium", "High"]
+
     
     def test_compound_not_found(self, setup_database):
         """Test query for non-existent compound"""
@@ -125,9 +120,7 @@ class TestCompoundAgent:
         query = "Tell me about compound CMP-9999"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Compound Intelligence Agent"
         assert "couldn't find" in response.answer.lower()
-        assert response.uncertainty == "High"
     
     def test_target_protein_query(self, setup_database):
         """Test target protein query"""
@@ -135,7 +128,7 @@ class TestCompoundAgent:
         query = "Which compounds target JAK2?"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Compound Intelligence Agent"
+
         assert len(response.evidence) > 0
     
     def test_therapeutic_area_query(self, setup_database):
@@ -144,7 +137,7 @@ class TestCompoundAgent:
         query = "Show me oncology compounds"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Compound Intelligence Agent"
+
         assert len(response.evidence) > 0
     
     def test_general_compound_query(self, setup_database):
@@ -153,7 +146,7 @@ class TestCompoundAgent:
         query = "Tell me about compounds"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Compound Intelligence Agent"
+
         assert len(response.evidence) > 0
 
 
@@ -173,9 +166,9 @@ class TestSafetyAgent:
         query = "What are the safety issues for trial TRL-0001?"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Safety Intelligence Agent"
+
         assert len(response.evidence) > 0
-        assert response.uncertainty in ["Low", "Medium", "High"]
+
     
     def test_trial_not_found(self, setup_database):
         """Test safety query for non-existent trial"""
@@ -183,9 +176,7 @@ class TestSafetyAgent:
         query = "What are the safety issues for trial TRL-9999?"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Safety Intelligence Agent"
         assert "couldn't find" in response.answer.lower()
-        assert response.uncertainty == "High"
     
     def test_triage_query(self, setup_database):
         """Test triage query"""
@@ -193,7 +184,7 @@ class TestSafetyAgent:
         query = "Triage adverse events"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Safety Intelligence Agent"
+
         assert len(response.evidence) > 0
     
     def test_adverse_event_query(self, setup_database):
@@ -202,7 +193,7 @@ class TestSafetyAgent:
         query = "Show me adverse events"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Safety Intelligence Agent"
+
         assert len(response.evidence) > 0
     
     def test_general_safety_query(self, setup_database):
@@ -211,7 +202,7 @@ class TestSafetyAgent:
         query = "Tell me about safety"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Safety Intelligence Agent"
+
         assert len(response.evidence) > 0
 
 
@@ -231,9 +222,9 @@ class TestResearchAgent:
         query = "What research exists for compound CMP-0001?"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Research Document Agent"
+
         assert len(response.evidence) >= 0  # May be 0 if no documents
-        assert response.uncertainty in ["Low", "Medium", "High"]
+
     
     def test_target_research_query(self, setup_database, setup_document_index):
         """Test research query for target protein"""
@@ -241,7 +232,7 @@ class TestResearchAgent:
         query = "Research on JAK2 inhibitors"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Research Document Agent"
+
         assert len(response.evidence) >= 0
     
     def test_therapeutic_research_query(self, setup_database, setup_document_index):
@@ -250,7 +241,7 @@ class TestResearchAgent:
         query = "Oncology research documents"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Research Document Agent"
+
         assert len(response.evidence) >= 0
     
     def test_toxicity_research_query(self, setup_database, setup_document_index):
@@ -259,7 +250,7 @@ class TestResearchAgent:
         query = "Cardiotoxicity research"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Research Document Agent"
+
         assert len(response.evidence) >= 0
     
     def test_literature_review_query(self, setup_database, setup_document_index):
@@ -268,7 +259,7 @@ class TestResearchAgent:
         query = "Literature review on kinase inhibitors"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Research Document Agent"
+
         assert len(response.evidence) >= 0
     
     def test_document_search_query(self, setup_database, setup_document_index):
@@ -277,7 +268,7 @@ class TestResearchAgent:
         query = "Search for documents about phase II trials"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Research Document Agent"
+
         assert len(response.evidence) >= 0
 
 
@@ -297,9 +288,9 @@ class TestSynthesisAgent:
         query = "Give me comprehensive analysis of trial enrollment and compound data"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Synthesis Agent"
+
         assert len(response.evidence) >= 0
-        assert response.uncertainty in ["Low", "Medium", "High"]
+
     
     def test_synthesis_with_no_keywords(self, setup_database, setup_document_index):
         """Test synthesis when no specific keywords are detected"""
@@ -307,7 +298,7 @@ class TestSynthesisAgent:
         query = "Analyze the current research portfolio"
         response = agent.process_query(query)
         
-        assert response.agent_used == "Synthesis Agent"
+
         assert len(response.evidence) >= 0
 
 

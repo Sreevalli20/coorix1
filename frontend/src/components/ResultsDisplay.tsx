@@ -44,8 +44,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
 
   const isEmptyResult = results.evidence.length === 0 && 
                        (results.answer.includes("couldn't find") || 
-                        results.answer.includes("not found") ||
-                        results.uncertainty === "High");
+                        results.answer.includes("not found"));
 
   return (
     <div className="results-display">

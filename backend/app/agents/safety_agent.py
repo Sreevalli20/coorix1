@@ -45,10 +45,7 @@ class SafetyAgent(BaseAgent):
                 answer=f"I couldn't find trial {trial_id} in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="No verified evidence was found for this trial.",
-                uncertainty="High",
-                agent_used=self.name,
-                processing_time_ms=50.0
+                interpretation="No verified evidence was found for this trial."
             )
         
         # Get safety summary
@@ -92,10 +89,7 @@ class SafetyAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=[trial_id] + [ae["event_id"] for ae in adverse_events[:5]],
-            interpretation=interpretation,
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=150.0
+            interpretation=interpretation
         )
     
     def _handle_triage_query(self, query: str) -> QueryResponse:
@@ -118,10 +112,7 @@ class SafetyAgent(BaseAgent):
                 answer="No serious adverse events requiring triage found in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="No immediate safety concerns identified",
-                uncertainty="Low",
-                agent_used=self.name,
-                processing_time_ms=100.0
+                interpretation="No immediate safety concerns identified"
             )
         
         # Group by trial
@@ -166,10 +157,7 @@ class SafetyAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation="Immediate safety review recommended for prioritized trials",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=200.0
+            interpretation="Immediate safety review recommended for prioritized trials"
         )
     
     def _triage_trial(self, trial_id: str) -> QueryResponse:
@@ -181,10 +169,7 @@ class SafetyAgent(BaseAgent):
                 answer=f"I couldn't find trial {trial_id} in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="No verified evidence was found for this trial.",
-                uncertainty="High",
-                agent_used=self.name,
-                processing_time_ms=50.0
+                interpretation="No verified evidence was found for this trial."
             )
         
         # Get adverse events
@@ -209,10 +194,7 @@ class SafetyAgent(BaseAgent):
                     )
                 ],
                 sources=[trial_id],
-                interpretation="No immediate safety concerns - routine monitoring",
-                uncertainty="Low",
-                agent_used=self.name,
-                processing_time_ms=100.0
+                interpretation="No immediate safety concerns - routine monitoring"
             )
         
         # Build triage report
@@ -267,10 +249,7 @@ class SafetyAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation=interpretation,
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=150.0
+            interpretation=interpretation
         )
     
     def _handle_adverse_event_query(self, query: str) -> QueryResponse:
@@ -297,10 +276,7 @@ class SafetyAgent(BaseAgent):
                     answer=f"I couldn't find adverse events matching '{event_term}' in the available research records.",
                     evidence=[],
                     sources=[],
-                    interpretation=f"No data for specified event type",
-                    uncertainty="Medium",
-                    agent_used=self.name,
-                    processing_time_ms=80.0
+                    interpretation=f"No data for specified event type"
                 )
             
             # Analyze events
@@ -335,10 +311,7 @@ class SafetyAgent(BaseAgent):
                 answer=answer,
                 evidence=evidence,
                 sources=sources,
-                interpretation=f"Event pattern analysis for {event_term}",
-                uncertainty="Low",
-                agent_used=self.name,
-                processing_time_ms=150.0
+                interpretation=f"Event pattern analysis for {event_term}"
             )
         
         # General adverse event query
@@ -360,10 +333,7 @@ class SafetyAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=[],
-            interpretation="Overall adverse event patterns",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=100.0
+            interpretation="Overall adverse event patterns"
         )
     
     def _handle_general_safety_query(self, query: str) -> QueryResponse:
@@ -402,8 +372,5 @@ class SafetyAgent(BaseAgent):
             answer=answer,
             evidence=evidence,
             sources=[],
-            interpretation="Overall safety profile shows manageable adverse event rate",
-            uncertainty="Low",
-            agent_used=self.name,
-            processing_time_ms=100.0
+            interpretation="Overall safety profile shows manageable adverse event rate"
         )
