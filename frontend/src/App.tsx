@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import QueryInterface from './components/QueryInterface';
 import ResultsDisplay from './components/ResultsDisplay';
 import AgentStatus from './components/AgentStatus';
 import Header from './components/Header';
 import { apiService } from './services/api';
-import { QueryResponse, AppState } from './types';
+import { AppState } from './types';
 import './App.css';
 
 function App() {
