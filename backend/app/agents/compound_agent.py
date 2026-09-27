@@ -52,7 +52,7 @@ class CompoundAgent(BaseAgent):
         
         if not compound:
             return QueryResponse(
-                answer=f"I couldn't find verified records matching {compound_id} in the available research evidence.",
+                answer=f"I searched the available research evidence but couldn't find verified records matching {compound_id}. This could mean the compound identifier is incorrect or it's not in our current database. Would you like me to help you find information about a different compound?",
                 evidence=[],
                 sources=[],
                 interpretation="Without matching evidence, I can't provide a verified clinical, laboratory, safety, or research assessment for this compound. You can try another compound identifier or ask about a related clinical trial, safety event, laboratory result, or research topic."
@@ -70,11 +70,14 @@ class CompoundAgent(BaseAgent):
         evidence = []
         answer_parts = []
         
-        # Compound overview
-        answer_parts.append(f"**Compound Overview**")
-        answer_parts.append(f"**{compound_id}** ({compound['compound_name']}) is a {compound['chemical_class']} targeting {compound['target_protein']} for {compound['therapeutic_area']}.")
-        answer_parts.append(f"**Development Phase:** {compound['discovery_phase']}")
-        answer_parts.append(f"**Mechanism of Action:** {compound['mechanism_of_action']}")
+        # Compound overview with conversational tone
+        answer_parts.append(f"**Compound Profile**")
+        answer_parts.append(f"I found information about **{compound_id}** ({compound['compound_name']}). This is a {compound['chemical_class']} that targets {compound['target_protein']} for treating {compound['therapeutic_area']}.")
+        answer_parts.append(f"")
+        answer_parts.append(f"**Key Details:**")
+        answer_parts.append(f"- **Development Phase:** {compound['discovery_phase']}")
+        answer_parts.append(f"- **Mechanism of Action:** {compound['mechanism_of_action']}")
+        answer_parts.append(f"- **Lead Scientist:** {compound['lead_scientist']}")
         
         evidence.append(
             self.create_evidence(
@@ -85,21 +88,23 @@ class CompoundAgent(BaseAgent):
             )
         )
         
-        # Clinical trial evidence
+        # Clinical trial evidence with conversational tone
         if trials:
             active_trials = [t for t in trials if t["status"] in ["Recruiting", "Active, not recruiting"]]
             completed_trials = [t for t in trials if t["status"] == "Completed"]
             
-            answer_parts.append(f"\n**Clinical Evidence**")
-            answer_parts.append(f"This compound is associated with {len(trials)} clinical trial(s).")
-            if active_trials:
-                answer_parts.append(f"- {len(active_trials)} trial(s) currently active or recruiting")
-            if completed_trials:
-                answer_parts.append(f"- {len(completed_trials)} trial(s) completed")
+            answer_parts.append(f"\n**Clinical Development Status**")
+            answer_parts.append(f"This compound has {len(trials)} clinical trial(s) in our records.")
             
-            # Add specific trial evidence
-            for trial in trials[:3]:
-                answer_parts.append(f"- Trial {trial['trial_id']}: {trial['trial_phase']} in {trial['therapeutic_area']} - Status: {trial['status']}")
+            if active_trials:
+                answer_parts.append(f"- {len(active_trials)} trial(s) are currently active or recruiting")
+            if completed_trials:
+                answer_parts.append(f"- {len(completed_trials)} trial(s) have been completed")
+            
+            if len(trials) > 0:
+                answer_parts.append(f"\n**Key Clinical Trials:**")
+                for trial in trials[:3]:
+                    answer_parts.append(f"- **{trial['trial_id']}**: {trial['trial_phase']} in {trial['therapeutic_area']} - Currently {trial['status']}")
             
             evidence.append(
                 self.create_evidence(
@@ -110,7 +115,7 @@ class CompoundAgent(BaseAgent):
                 )
             )
         
-        # Laboratory evidence
+        # Laboratory evidence with conversational tone
         if lab_results:
             pass_fail_counts = {"Pass": 0, "Fail": 0}
             for result in lab_results:
@@ -118,10 +123,10 @@ class CompoundAgent(BaseAgent):
             
             pass_rate = pass_fail_counts.get("Pass", 0) / len(lab_results) * 100
             
-            answer_parts.append(f"\n**Laboratory Evidence**")
-            answer_parts.append(f"{len(lab_results)} laboratory test(s) completed with a {pass_rate:.1f}% pass rate.")
-            answer_parts.append(f"- Passed: {pass_fail_counts.get('Pass', 0)}")
-            answer_parts.append(f"- Failed: {pass_fail_counts.get('Fail', 0)}")
+            answer_parts.append(f"\n**Laboratory Testing Results**")
+            answer_parts.append(f"The compound has undergone {len(lab_results)} laboratory test(s) with an overall {pass_rate:.1f}% pass rate.")
+            answer_parts.append(f"- **Passed:** {pass_fail_counts.get('Pass', 0)} tests")
+            answer_parts.append(f"- **Failed:** {pass_fail_counts.get('Fail', 0)} tests")
             
             evidence.append(
                 self.create_evidence(
@@ -135,13 +140,15 @@ class CompoundAgent(BaseAgent):
                 )
             )
         
-        # Research evidence
+        # Research evidence with conversational tone
         if documents:
-            answer_parts.append(f"\n**Research Evidence**")
-            answer_parts.append(f"{len(documents)} research document(s) available for this compound.")
+            answer_parts.append(f"\n**Research Documentation**")
+            answer_parts.append(f"I found {len(documents)} research document(s) related to this compound.")
             
-            for doc in documents[:3]:
-                answer_parts.append(f"- Document {doc['doc_id']}: {doc['title']}")
+            if len(documents) > 0:
+                answer_parts.append(f"\n**Key Research Papers:**")
+                for doc in documents[:3]:
+                    answer_parts.append(f"- **{doc['title']}** (Document: {doc['doc_id']})")
             
             evidence.append(
                 self.create_evidence(
@@ -152,21 +159,21 @@ class CompoundAgent(BaseAgent):
                 )
             )
         
-        # Handle partial evidence
+        # Handle partial evidence with conversational tone
         if not trials and not lab_results and not documents:
-            answer_parts.append(f"\n**Evidence Availability**")
-            answer_parts.append(f"While the compound record exists, no associated clinical trials, laboratory results, or research documents were found in the available evidence.")
+            answer_parts.append(f"\n**Additional Evidence**")
+            answer_parts.append(f"While I have the basic compound information, I couldn't find associated clinical trials, laboratory results, or research documents in our current database. This might indicate the compound is in early development stages or the data hasn't been fully integrated yet.")
         
         answer = "\n\n".join(answer_parts)
         
         # Build interpretation based on available evidence
         interpretation_parts = []
         if trials:
-            interpretation_parts.append(f"Clinical trial data shows {len(trials)} associated trial(s).")
+            interpretation_parts.append(f"Clinical development shows {len(trials)} trial(s) in progress or completed.")
         if lab_results:
-            interpretation_parts.append(f"Laboratory testing shows {pass_fail_counts.get('Pass', 0)}/{len(lab_results)} tests passed.")
+            interpretation_parts.append(f"Laboratory testing shows {pass_fail_counts.get('Pass', 0)}/{len(lab_results)} tests passed, indicating {pass_rate:.1f}% success rate.")
         if documents:
-            interpretation_parts.append(f"Research documentation includes {len(documents)} document(s).")
+            interpretation_parts.append(f"Research literature includes {len(documents)} related document(s).")
         
         if interpretation_parts:
             interpretation = " ".join(interpretation_parts)

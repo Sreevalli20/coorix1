@@ -1,6 +1,6 @@
 import { QueryRequest, QueryResponse } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://coorix1.onrender.com';
 
 class ApiService {
   private async request<T>(
@@ -8,6 +8,8 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    
+    console.log(`API Request: ${url}`, options);
     
     const response = await fetch(url, {
       headers: {
@@ -17,11 +19,17 @@ class ApiService {
       ...options,
     });
 
+    console.log(`API Response status: ${response.status}`);
+
     if (!response.ok) {
-      throw new Error('Unable to process your request. Please try again.');
+      const errorText = await response.text();
+      console.error(`API Error: ${response.status} - ${errorText}`);
+      throw new Error(`Unable to process your request (${response.status}). Please try again.`);
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log('API Response data:', data);
+    return data;
   }
 
   async processQuery(query: string, userRole: string = 'user'): Promise<QueryResponse> {

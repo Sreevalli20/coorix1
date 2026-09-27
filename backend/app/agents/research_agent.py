@@ -54,7 +54,7 @@ class ResearchAgent(BaseAgent):
         
         if not compound:
             return QueryResponse(
-                answer=f"I couldn't find {compound_id} in the available research records.",
+                answer=f"I searched for research on {compound_id} but couldn't find this compound in our research records. Please verify the compound identifier or let me know if you'd like me to search for a different compound.",
                 evidence=[],
                 sources=[],
                 interpretation="No verified evidence was found for this compound. You may want to verify the compound identifier or ask about available compounds."
@@ -65,7 +65,7 @@ class ResearchAgent(BaseAgent):
         
         if not documents:
             return QueryResponse(
-                answer=f"No research documents were found for compound {compound_id} ({compound['compound_name']}).",
+                answer=f"While I found the compound record for {compound_id} ({compound['compound_name']}), I couldn't locate any research documents in our current database. This might indicate that research documentation hasn't been fully integrated yet. Would you like me to check for clinical trials or laboratory results for this compound instead?",
                 evidence=[],
                 sources=[compound_id],
                 interpretation=f"While the compound record exists, no research documentation is available in the current evidence base. You may want to ask about clinical trials or laboratory results for this compound instead."
@@ -84,8 +84,30 @@ class ResearchAgent(BaseAgent):
             )
         ]
         
+        # Build conversational answer
+        answer_parts = [
+            f"**Research Literature for {compound_id}**",
+            f"I found {len(documents)} research document(s) related to {compound['compound_name']} in our database.",
+            f""
+        ]
+        
+        # Add document type summary
+        doc_types = self._summarize_document_types(documents)
+        if doc_types:
+            answer_parts.append(f"**Document Types Available:**")
+            for doc_type, count in doc_types.items():
+                answer_parts.append(f"- {doc_type}: {count} document(s)")
+            answer_parts.append(f"")
+        
         # Add specific document evidence
+        answer_parts.append(f"**Key Research Documents:**")
         for doc in documents[:3]:
+            answer_parts.append(f"- **{doc['title']}** (Document: {doc['doc_id']})")
+            answer_parts.append(f"  - Type: {doc['doc_type']}")
+            answer_parts.append(f"  - Author: {doc['author']}")
+            answer_parts.append(f"  - Date: {doc['date']}")
+            answer_parts.append(f"")
+            
             evidence.append(
                 self.create_evidence(
                     source="research_documents",
@@ -102,32 +124,11 @@ class ResearchAgent(BaseAgent):
                 )
             )
         
-        # Build answer
-        answer_parts = [
-            f"**Research Documentation for {compound_id}**",
-            f"**Compound:** {compound_id} ({compound['compound_name']})",
-            f"**Target Protein:** {compound['target_protein']}",
-            f"**Therapeutic Area:** {compound['therapeutic_area']}",
-            f"\n**Available Research:** {len(documents)} document(s) found.",
-        ]
-        
-        # Add document type summary
-        doc_types = self._summarize_document_types(documents)
-        if doc_types:
-            answer_parts.append(f"\n**Document Types:**")
-            for doc_type, count in sorted(doc_types.items()):
-                answer_parts.append(f"- {doc_type}: {count} document(s)")
-        
-        # Add specific documents
-        answer_parts.append(f"\n**Research Documents:**")
-        for doc in documents[:5]:
-            answer_parts.append(f"- {doc['doc_id']}: {doc['title']} ({doc['doc_type']}) by {doc['author']}")
-        
         # Add key insights from documents
         if documents:
             key_insights = self._extract_key_insights(documents)
             if key_insights:
-                answer_parts.append(f"\n**Key Takeaways from Research:**")
+                answer_parts.append(f"**Key Takeaways from Research:**")
                 for insight in key_insights[:3]:
                     answer_parts.append(f"- {insight}")
         
@@ -236,7 +237,10 @@ class ResearchAgent(BaseAgent):
         ]
         
         answer_parts = [
-            f"**Toxicity Research**",
+            f"**Research Findings**",
+            f"",
+            f"I searched our research database for information about {target_protein if target_protein else 'cardiotoxicity and toxicity'} and found {len(search_results)} relevant document(s).",
+            f""
         ]
         
         if cardiotoxicity_docs:
@@ -394,12 +398,13 @@ class ResearchAgent(BaseAgent):
             )
         ]
         
-        answer = f"**Research Findings**\n\nI found {len(search_results)} research documents matching your query.\n\n"
-        answer += "Top results:\n"
+        answer = f"**Research Findings**\n\nI searched our research database and found {len(search_results)} document(s) matching your query.\n\n"
+        answer += "**Most Relevant Documents:**\n"
         
         for i, doc in enumerate(search_results[:3], 1):
-            answer += f"{i}. {doc['title']} ({doc['doc_type']}) - Relevance: {doc.get('relevance_score', 0):.2f}\n"
-            answer += f"   {doc.get('snippet', '')}\n"
+            answer += f"{i}. **{doc['title']}** ({doc['doc_type']})\n"
+            if doc.get('snippet'):
+                answer += f"   {doc.get('snippet', '')}\n"
         
         sources = [doc["doc_id"] for doc in search_results]
         

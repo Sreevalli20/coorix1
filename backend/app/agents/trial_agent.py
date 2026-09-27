@@ -79,20 +79,22 @@ class TrialAgent(BaseAgent):
                 )
             ]
             
-            answer_parts = [
-                f"**Enrollment Analysis**",
-                f"I found {len(trials_below)} {phase} {therapeutic_area} trial(s) below {threshold}% enrollment out of {len(trials)} total {phase} {therapeutic_area} trials.",
-                f"\n**Trials Below Target:**"
-            ]
+            if len(trials_below) == 0:
+                answer = f"Good news! I've analyzed all {len(trials)} {phase} {therapeutic_area} trials and found that none are currently below the {threshold}% enrollment threshold. The enrollment efforts in this area appear to be performing well."
+            else:
+                answer = f"I've analyzed the {phase} {therapeutic_area} trials and identified {len(trials_below)} out of {len(trials)} trials that are below the {threshold}% enrollment threshold. These trials may need additional recruitment support."
+                
+                answer += "\n\n**The trials requiring attention are:**\n"
+                for trial in trials_below[:5]:
+                    enrollment_pct = trial.get("enrollment_pct", 0)
+                    gap = trial['target_enrollment'] - trial['actual_enrollment']
+                    answer += f"- **{trial['trial_id']}**: Currently at {enrollment_pct:.1f}% enrollment (missing {gap} patients). Status: {trial['status']}\n"
+                
+                if len(trials_below) > 5:
+                    answer += f"- ... and {len(trials_below) - 5} additional trials also below target\n"
+                
+                answer += f"\nI recommend prioritizing recruitment efforts for these trials to meet their enrollment targets."
             
-            for trial in trials_below[:5]:
-                enrollment_pct = trial.get("enrollment_pct", 0)
-                answer_parts.append(f"- {trial['trial_id']}: {enrollment_pct:.1f}% enrollment (Target: {trial['target_enrollment']}, Actual: {trial['actual_enrollment']}) - Status: {trial['status']}")
-            
-            if len(trials_below) > 5:
-                answer_parts.append(f"- ... and {len(trials_below) - 5} more trial(s)")
-            
-            answer = "\n".join(answer_parts)
             sources = [t["trial_id"] for t in trials_below]
             
         else:
@@ -107,20 +109,22 @@ class TrialAgent(BaseAgent):
                 )
             ]
             
-            answer_parts = [
-                f"**Enrollment Analysis**",
-                f"I found {len(trials)} trial(s) below {threshold}% enrollment across all phases and therapeutic areas.",
-                f"\n**Trials Below Target:**"
-            ]
+            if len(trials) == 0:
+                answer = f"Excellent! I've reviewed all clinical trials across the portfolio and found that none are currently below the {threshold}% enrollment threshold. The overall recruitment performance appears strong."
+            else:
+                answer = f"I've identified {len(trials)} clinical trials across the portfolio that are currently below the {threshold}% enrollment threshold. These trials may require intervention to meet their enrollment goals."
+                
+                answer += "\n\n**The trials needing attention include:**\n"
+                for trial in trials[:5]:
+                    enrollment_pct = trial.get("enrollment_pct", 0)
+                    gap = trial['target_enrollment'] - trial['actual_enrollment']
+                    answer += f"- **{trial['trial_id']}** ({trial['trial_phase']} in {trial['therapeutic_area']}): {enrollment_pct:.1f}% enrollment, missing {gap} patients. Current status: {trial['status']}\n"
+                
+                if len(trials) > 5:
+                    answer += f"- ... and {len(trials) - 5} additional trials also require attention\n"
+                
+                answer += "\nWould you like me to provide more detailed analysis on any specific trial or therapeutic area?"
             
-            for trial in trials[:5]:
-                enrollment_pct = trial.get("enrollment_pct", 0)
-                answer_parts.append(f"- {trial['trial_id']} ({trial['trial_phase']}, {trial['therapeutic_area']}): {enrollment_pct:.1f}% enrollment - Status: {trial['status']}")
-            
-            if len(trials) > 5:
-                answer_parts.append(f"- ... and {len(trials) - 5} more trial(s)")
-            
-            answer = "\n".join(answer_parts)
             sources = [t["trial_id"] for t in trials]
         
         interpretation = f"These trials may require recruitment intervention to meet enrollment targets. {len(trials_below if phase and therapeutic_area else trials)} trial(s) are below the {threshold}% threshold."

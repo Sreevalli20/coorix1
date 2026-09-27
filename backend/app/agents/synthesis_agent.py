@@ -80,8 +80,9 @@ class SynthesisAgent(BaseAgent):
                 interpretation="No relevant evidence was found across the available data sources. You may want to try a different question or ask about specific compounds, trials, or research topics."
             )
         
-        # Build synthesized answer with better structure
+        # Build synthesized answer with conversational tone
         answer_parts = [f"**Comprehensive Analysis**\n\n"]
+        answer_parts.append("I've analyzed your question across multiple data sources to provide you with a complete picture. Here's what I found:\n\n")
         
         # Group responses by evidence type for better organization
         clinical_responses = []
@@ -100,7 +101,7 @@ class SynthesisAgent(BaseAgent):
                 elif agent_name == "research":
                     research_responses.append(response.answer)
         
-        # Add organized sections
+        # Add organized sections with conversational headers
         if clinical_responses:
             answer_parts.append("**Clinical Evidence**")
             for resp in clinical_responses:
@@ -136,16 +137,16 @@ class SynthesisAgent(BaseAgent):
         # Deduplicate sources
         unique_sources = list(set(all_sources))
         
-        # Build interpretation based on what was found
+        # Build interpretation based on what was found with conversational tone
         interpretation_parts = []
         if clinical_responses:
-            interpretation_parts.append("Clinical trial evidence was available.")
+            interpretation_parts.append("I was able to analyze clinical trial data for your question.")
         if compound_responses:
-            interpretation_parts.append("Compound evidence was available.")
+            interpretation_parts.append("Compound information was available from our database.")
         if safety_responses:
-            interpretation_parts.append("Safety evidence was available.")
+            interpretation_parts.append("Safety data and adverse event information were accessible.")
         if research_responses:
-            interpretation_parts.append("Research documentation was available.")
+            interpretation_parts.append("Research documentation and literature were found in our corpus.")
         
         if interpretation_parts:
             interpretation = " ".join(interpretation_parts)

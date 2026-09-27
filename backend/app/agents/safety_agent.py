@@ -42,7 +42,7 @@ class SafetyAgent(BaseAgent):
         
         if not trial:
             return QueryResponse(
-                answer=f"I couldn't find trial {trial_id} in the available research records.",
+                answer=f"I searched for trial {trial_id} but couldn't find it in our safety records. Please verify the trial identifier or let me know if you'd like me to check for a different trial.",
                 evidence=[],
                 sources=[],
                 interpretation="No verified evidence was found for this trial. You may want to verify the trial identifier or ask about available trials."
@@ -61,35 +61,38 @@ class SafetyAgent(BaseAgent):
             )
         ]
         
-        # Build answer with better formatting
+        # Build answer with conversational tone
         answer_parts = [
             f"**Safety Assessment for Trial {trial_id}**",
-            f"**Total Reported Events:** {safety_summary['total_events']}",
-            f"**Serious Events:** {safety_summary['serious_events']}",
-            f"**Severe Events:** {safety_summary['severe_events']}",
-            f"**Related Events:** {safety_summary['related_events']}",
-            f"**Risk Level:** {safety_summary['risk_level']}"
+            f"I've reviewed the safety data for this trial and here's what I found:",
+            f"",
+            f"**Safety Overview:**",
+            f"- **Total Reported Events:** {safety_summary['total_events']}",
+            f"- **Serious Events:** {safety_summary['serious_events']}",
+            f"- **Severe Events:** {safety_summary['severe_events']}",
+            f"- **Events Related to Treatment:** {safety_summary['related_events']}",
+            f"- **Current Risk Level:** {safety_summary['risk_level']}"
         ]
         
         if safety_summary['most_common_events']:
-            answer_parts.append(f"\n**Most Common Events:**")
+            answer_parts.append(f"\n**Most Common Adverse Events:**")
             for event, count in safety_summary['most_common_events']:
                 answer_parts.append(f"- {event}: {count} occurrence(s)")
         
         if safety_summary['total_events'] == 0:
-            answer_parts.append(f"\n**Observation:** No adverse events have been reported for this trial.")
+            answer_parts.append(f"\n**Good News:** No adverse events have been reported for this trial, which suggests a favorable safety profile so far.")
         
         answer = "\n".join(answer_parts)
         
         # Determine interpretation based on risk level and actual data
         if safety_summary['total_events'] == 0:
-            interpretation = "No adverse events reported for this trial."
+            interpretation = "No adverse events reported for this trial, indicating a positive safety profile."
         elif safety_summary['risk_level'] == "High":
-            interpretation = f"High risk level detected based on {safety_summary['serious_events']} serious event(s) and {safety_summary['severe_events']} severe event(s). Immediate review recommended."
+            interpretation = f"High risk level detected based on {safety_summary['serious_events']} serious event(s) and {safety_summary['severe_events']} severe event(s). I recommend immediate review and possible intervention."
         elif safety_summary['risk_level'] == "Medium":
-            interpretation = f"Medium risk level based on event patterns. Routine monitoring recommended."
+            interpretation = f"Medium risk level based on event patterns. I suggest routine monitoring and continued observation."
         else:
-            interpretation = f"Low risk level based on available safety data. Standard monitoring continues."
+            interpretation = f"Low risk level based on available safety data. Standard monitoring protocols should continue."
         
         return QueryResponse(
             answer=answer,
