@@ -79,7 +79,7 @@ class TrialAgent(BaseAgent):
                 )
             ]
             
-            answer = f"Found {len(trials_below)} {phase} {therapeutic_area} trials below {threshold}% enrollment out of {len(trials)} total {phase} {therapeutic_area} trials."
+            answer = f"**Trial Findings**\n\nI found {len(trials_below)} {phase} {therapeutic_area} trials below {threshold}% enrollment out of {len(trials)} total {phase} {therapeutic_area} trials."
             
             sources = [t["trial_id"] for t in trials_below]
             
@@ -95,14 +95,14 @@ class TrialAgent(BaseAgent):
                 )
             ]
             
-            answer = f"Found {len(trials)} trials below {threshold}% enrollment across all phases and therapeutic areas."
+            answer = f"**Trial Findings**\n\nI found {len(trials)} trials below {threshold}% enrollment across all phases and therapeutic areas."
             sources = [t["trial_id"] for t in trials]
         
         return QueryResponse(
             answer=answer,
             evidence=evidence,
             sources=sources,
-            interpretation="Enrollment data reflects current recruitment status. Trials below threshold may require intervention.",
+            interpretation="These trials may require recruitment intervention to meet enrollment targets.",
             uncertainty="Low",
             agent_used=self.name,
             processing_time_ms=150.0
@@ -153,7 +153,7 @@ class TrialAgent(BaseAgent):
             )
         ]
         
-        answer = f"Found {total_trials} {phase} trials. Status breakdown: {', '.join(f'{k}: {v}' for k, v in status_counts.items())}."
+        answer = f"**Trial Findings**\n\nI found {total_trials} {phase} trials. Status breakdown: {', '.join(f'{k}: {v}' for k, v in status_counts.items())}."
         
         return QueryResponse(
             answer=answer,
@@ -187,7 +187,7 @@ class TrialAgent(BaseAgent):
                     )
                 ]
                 
-                answer = f"Trial {trial_id} is currently {trial['status']}. Target enrollment: {trial['target_enrollment']}, Actual enrollment: {trial['actual_enrollment']}."
+                answer = f"**Trial Findings**\n\n**Trial:** {trial_id}\n**Status:** {trial['status']}\n**Target Enrollment:** {trial['target_enrollment']}\n**Actual Enrollment:** {trial['actual_enrollment']}"
                 
                 return QueryResponse(
                     answer=answer,
@@ -200,10 +200,10 @@ class TrialAgent(BaseAgent):
                 )
             else:
                 return QueryResponse(
-                    answer=f"Trial {trial_id} not found in database.",
+                    answer=f"I couldn't find trial {trial_id} in the available research records.",
                     evidence=[],
                     sources=[],
-                    interpretation="Specified trial ID not found",
+                    interpretation="No verified evidence was found for this trial.",
                     uncertainty="High",
                     agent_used=self.name,
                     processing_time_ms=50.0
@@ -224,7 +224,7 @@ class TrialAgent(BaseAgent):
             )
         ]
         
-        answer = f"Current trial status distribution: {', '.join(f'{k}: {v}' for k, v in status_summary.items())}."
+        answer = f"**Trial Findings**\n\nCurrent trial status distribution: {', '.join(f'{k}: {v}' for k, v in status_summary.items())}."
         
         return QueryResponse(
             answer=answer,

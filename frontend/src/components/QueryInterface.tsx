@@ -28,7 +28,7 @@ const exampleQuestions: ExampleQuestion[] = [
   },
   {
     id: '4',
-    question: 'Give me the full picture on compound DKU-1042: labs, trials, safety, and related literature.',
+    question: 'Tell me about compound DKU-1001.',
     category: 'Compound Intelligence',
     icon: '💊'
   }

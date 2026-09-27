@@ -96,8 +96,6 @@ export interface AppState {
   results: QueryResponse | null;
   loading: boolean;
   error: string | null;
-  agentStatus: string;
-  processingTime: number;
 }
 
 export interface ExampleQuestion {

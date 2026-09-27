@@ -84,13 +84,12 @@ class SynthesisAgent(BaseAgent):
             )
         
         # Build synthesized answer
-        answer_parts = [f"Comprehensive analysis for query: '{query}'\n"]
+        answer_parts = [f"**Comprehensive Analysis**\n\n"]
         
         # Add insights from each agent
         for agent_name, response in valid_responses.items():
             if response and response.answer:
-                answer_parts.append(f"\n{agent_name.upper()} INSIGHTS:")
-                answer_parts.append(response.answer)
+                answer_parts.append(f"\n{response.answer}")
         
         # Combine all evidence
         synthesized_evidence = []
@@ -114,12 +113,12 @@ class SynthesisAgent(BaseAgent):
         
         # Build interpretation
         num_agents = len(valid_responses)
-        interpretation = f"Synthesized response from {num_agents} specialist agent(s). "
+        interpretation = f"Analysis based on {num_agents} data source(s). "
         
         if num_agents > 1:
-            interpretation += "Multi-perspective analysis provides comprehensive coverage."
+            interpretation += "Multi-source analysis provides comprehensive coverage."
         else:
-            interpretation += "Single agent analysis provided."
+            interpretation += "Single source analysis provided."
         
         answer = "\n".join(answer_parts)
         
@@ -152,10 +151,10 @@ class SynthesisAgent(BaseAgent):
         
         if not compound:
             return QueryResponse(
-                answer=f"Compound {compound_id} not found in database.",
+                answer=f"I couldn't find {compound_id} in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="Specified compound not found",
+                interpretation="No verified evidence was found for this compound.",
                 uncertainty="High",
                 agent_used=self.name,
                 processing_time_ms=50.0
@@ -188,19 +187,18 @@ class SynthesisAgent(BaseAgent):
         
         # Build comprehensive profile
         answer_parts = [
-            f"COMPREHENSIVE PROFILE: Compound {compound_id}",
-            "=" * 50,
-            "\nBASIC INFORMATION:",
+            f"**Comprehensive Compound Profile**",
+            f"**Compound:** {compound_id}",
             compound_response.answer if compound_response else "No compound information available"
         ]
         
         if safety_insights:
-            answer_parts.append("\n\nSAFETY PROFILE:")
+            answer_parts.append("\n\n**Safety Profile:**")
             for insight in safety_insights:
                 answer_parts.append(f"- {insight}")
         
         if research_response and research_response.answer:
-            answer_parts.append("\n\nRESEARCH DOCUMENTATION:")
+            answer_parts.append("\n\n**Research Documentation:**")
             answer_parts.append(research_response.answer)
         
         answer = "\n".join(answer_parts)

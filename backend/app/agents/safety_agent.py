@@ -42,10 +42,10 @@ class SafetyAgent(BaseAgent):
         
         if not trial:
             return QueryResponse(
-                answer=f"Trial {trial_id} not found in database.",
+                answer=f"I couldn't find trial {trial_id} in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="Specified trial not found",
+                interpretation="No verified evidence was found for this trial.",
                 uncertainty="High",
                 agent_used=self.name,
                 processing_time_ms=50.0
@@ -66,12 +66,12 @@ class SafetyAgent(BaseAgent):
         
         # Build answer
         answer_parts = [
-            f"Safety profile for trial {trial_id}:",
-            f"Total adverse events: {safety_summary['total_events']}",
-            f"Serious events: {safety_summary['serious_events']}",
-            f"Severe events: {safety_summary['severe_events']}",
-            f"Related events: {safety_summary['related_events']}",
-            f"Risk level: {safety_summary['risk_level']}"
+            f"**Safety Findings**",
+            f"**Reported Events:** {safety_summary['total_events']} total adverse events",
+            f"**Serious Events:** {safety_summary['serious_events']}",
+            f"**Severe Events:** {safety_summary['severe_events']}",
+            f"**Related Events:** {safety_summary['related_events']}",
+            f"**Risk Level:** {safety_summary['risk_level']}"
         ]
         
         if safety_summary['most_common_events']:
@@ -82,11 +82,11 @@ class SafetyAgent(BaseAgent):
         
         # Determine interpretation based on risk level
         if safety_summary['risk_level'] == "High":
-            interpretation = "High risk level detected - immediate review recommended"
+            interpretation = "Key Observations: High risk level detected - immediate review recommended"
         elif safety_summary['risk_level'] == "Medium":
-            interpretation = "Medium risk level - routine monitoring recommended"
+            interpretation = "Key Observations: Medium risk level - routine monitoring recommended"
         else:
-            interpretation = "Low risk level - continue standard monitoring"
+            interpretation = "Key Observations: Low risk level - continue standard monitoring"
         
         return QueryResponse(
             answer=answer,
@@ -115,7 +115,7 @@ class SafetyAgent(BaseAgent):
         
         if not serious_events:
             return QueryResponse(
-                answer="No serious adverse events requiring triage found in the database.",
+                answer="No serious adverse events requiring triage found in the available research records.",
                 evidence=[],
                 sources=[],
                 interpretation="No immediate safety concerns identified",
@@ -157,7 +157,7 @@ class SafetyAgent(BaseAgent):
             )
         ]
         
-        answer = f"Found {len(serious_events)} serious adverse events across {len(trial_events)} trials requiring triage. "
+        answer = f"**Safety Findings**\n\nI found {len(serious_events)} serious adverse events across {len(trial_events)} trials requiring triage. "
         answer += f"Top priority trials: {', '.join([trial_id for trial_id, _ in prioritized_trials[:3]])}."
         
         sources = [event["event_id"] for event in serious_events[:10]]
@@ -178,10 +178,10 @@ class SafetyAgent(BaseAgent):
         
         if not trial:
             return QueryResponse(
-                answer=f"Trial {trial_id} not found in database.",
+                answer=f"I couldn't find trial {trial_id} in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="Specified trial not found",
+                interpretation="No verified evidence was found for this trial.",
                 uncertainty="High",
                 agent_used=self.name,
                 processing_time_ms=50.0
@@ -235,11 +235,11 @@ class SafetyAgent(BaseAgent):
         fatal_count = sum(1 for ae in critical_events if ae["outcome"] == "Fatal")
         
         answer_parts = [
-            f"SAFETY TRIAGE for trial {trial_id}:",
-            f"CRITICAL: {len(critical_events)} events require immediate attention",
-            f"Serious events: {serious_count}",
-            f"Severe events: {severe_count}",
-            f"Fatal outcomes: {fatal_count}"
+            f"**Safety Findings**",
+            f"**Reported Events:** {len(critical_events)} events require immediate attention",
+            f"**Serious Events:** {serious_count}",
+            f"**Severe Events:** {severe_count}",
+            f"**Fatal Outcomes:** {fatal_count}"
         ]
         
         # Add event details
@@ -255,11 +255,11 @@ class SafetyAgent(BaseAgent):
         
         # Determine triage priority
         if fatal_count > 0:
-            interpretation = "CRITICAL: Fatal events detected - immediate investigation required"
+            interpretation = "Key Observations: Fatal events detected - immediate investigation required"
         elif serious_count > 0:
-            interpretation = "HIGH: Serious events detected - urgent review required"
+            interpretation = "Key Observations: Serious events detected - urgent review required"
         else:
-            interpretation = "MEDIUM: Severe events detected - prompt review recommended"
+            interpretation = "Key Observations: Severe events detected - prompt review recommended"
         
         sources = [trial_id] + [ae["event_id"] for ae in critical_events]
         
@@ -294,7 +294,7 @@ class SafetyAgent(BaseAgent):
             
             if not events:
                 return QueryResponse(
-                    answer=f"No adverse events matching '{event_term}' found in database.",
+                    answer=f"I couldn't find adverse events matching '{event_term}' in the available research records.",
                     evidence=[],
                     sources=[],
                     interpretation=f"No data for specified event type",
@@ -325,7 +325,7 @@ class SafetyAgent(BaseAgent):
                 )
             ]
             
-            answer = f"Found {len(events)} adverse events matching '{event_term}'. "
+            answer = f"**Safety Findings**\n\nI found {len(events)} adverse events matching '{event_term}'. "
             answer += f"Severity distribution: {', '.join(f'{k}: {v}' for k, v in severity_counts.items())}. "
             answer += f"Seriousness distribution: {', '.join(f'{k}: {v}' for k, v in seriousness_counts.items())}."
             
@@ -354,7 +354,7 @@ class SafetyAgent(BaseAgent):
             )
         ]
         
-        answer = f"Most common adverse events: {', '.join([f"{e['adverse_event_term']} ({e['count']})" for e in common_events])}."
+        answer = f"**Safety Findings**\n\nMost common adverse events: {', '.join([f"{e['adverse_event_term']} ({e['count']})" for e in common_events])}."
         
         return QueryResponse(
             answer=answer,
@@ -394,7 +394,7 @@ class SafetyAgent(BaseAgent):
         total_events = sum(seriousness_summary.values())
         serious_percentage = (seriousness_summary.get("Serious", 0) / total_events * 100) if total_events > 0 else 0
         
-        answer = f"Total adverse events in database: {total_events}. "
+        answer = f"**Safety Findings**\n\nTotal adverse events: {total_events}. "
         answer += f"Serious events: {seriousness_summary.get('Serious', 0)} ({serious_percentage:.1f}%). "
         answer += f"Severity distribution: {', '.join(f'{k}: {v}' for k, v in severity_summary.items())}."
         

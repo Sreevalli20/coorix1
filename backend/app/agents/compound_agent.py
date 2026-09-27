@@ -52,10 +52,10 @@ class CompoundAgent(BaseAgent):
         
         if not compound:
             return QueryResponse(
-                answer=f"Compound {compound_id} not found in database.",
+                answer=f"I couldn't find {compound_id} in the available research records.",
                 evidence=[],
                 sources=[],
-                interpretation="Specified compound not found",
+                interpretation="No verified evidence was found for this compound, so there isn't enough information to provide a clinical, laboratory, safety, or research summary.",
                 uncertainty="High",
                 agent_used=self.name,
                 processing_time_ms=50.0
@@ -118,30 +118,29 @@ class CompoundAgent(BaseAgent):
         
         # Build answer
         answer_parts = [
-            f"Compound {compound_id} ({compound['compound_name']}) is a {compound['chemical_class']} "
-            f"targeting {compound['target_protein']} for {compound['therapeutic_area']}.",
-            f"Current phase: {compound['discovery_phase']}.",
-            f"Mechanism: {compound['mechanism_of_action']}."
+            f"**Compound Overview**",
+            f"**Compound:** {compound_id} ({compound['compound_name']})",
+            f"**Clinical Evidence:** {compound['chemical_class']} targeting {compound['target_protein']} for {compound['therapeutic_area']}. Current phase: {compound['discovery_phase']}. Mechanism: {compound['mechanism_of_action']}."
         ]
         
         if trials:
             active_trials = [t for t in trials if t["status"] in ["Recruiting", "Active, not recruiting"]]
-            answer_parts.append(f"Associated with {len(trials)} clinical trials ({len(active_trials)} currently active).")
+            answer_parts.append(f"**Trial Evidence:** Associated with {len(trials)} clinical trials ({len(active_trials)} currently active).")
         
         if lab_results:
             pass_rate = pass_fail_counts.get("Pass", 0) / len(lab_results) * 100
-            answer_parts.append(f"Laboratory testing: {len(lab_results)} tests completed with {pass_rate:.1f}% pass rate.")
+            answer_parts.append(f"**Laboratory Evidence:** {len(lab_results)} tests completed with {pass_rate:.1f}% pass rate.")
         
         if documents:
-            answer_parts.append(f"Research documentation: {len(documents)} related documents available.")
+            answer_parts.append(f"**Research Evidence:** {len(documents)} related documents available.")
         
-        answer = " ".join(answer_parts)
+        answer = "\n\n".join(answer_parts)
         
         return QueryResponse(
             answer=answer,
             evidence=evidence,
             sources=[compound_id] + [t["trial_id"] for t in trials[:5]] + [d["doc_id"] for d in documents[:3]],
-            interpretation="Comprehensive compound profile across development stages",
+            interpretation="Summary of available evidence for this compound.",
             uncertainty="Low",
             agent_used=self.name,
             processing_time_ms=200.0
@@ -204,7 +203,7 @@ class CompoundAgent(BaseAgent):
             )
         ]
         
-        answer = f"Found {len(compounds)} compounds targeting {target_protein}. "
+        answer = f"**Compound Overview**\n\nI found {len(compounds)} compounds targeting {target_protein}. "
         answer += f"Phase distribution: {', '.join(f'{k}: {v}' for k, v in phase_distribution.items())}."
         
         sources = [c["compound_id"] for c in compounds[:10]]
@@ -275,7 +274,7 @@ class CompoundAgent(BaseAgent):
             )
         ]
         
-        answer = f"Found {len(compounds)} compounds in {therapeutic_area}. "
+        answer = f"**Compound Overview**\n\nI found {len(compounds)} compounds in {therapeutic_area}. "
         answer += f"Chemical class distribution: {', '.join(f'{k}: {v}' for k, v in class_distribution.items())}."
         
         sources = [c["compound_id"] for c in compounds[:10]]
@@ -316,7 +315,7 @@ class CompoundAgent(BaseAgent):
         ]
         
         total_compounds = sum(area_summary.values())
-        answer = f"Portfolio contains {total_compounds} compounds across {len(area_summary)} therapeutic areas. "
+        answer = f"**Compound Overview**\n\nPortfolio contains {total_compounds} compounds across {len(area_summary)} therapeutic areas. "
         answer += f"Phase distribution: {', '.join(f'{k}: {v}' for k, v in phase_summary.items())}."
         
         return QueryResponse(

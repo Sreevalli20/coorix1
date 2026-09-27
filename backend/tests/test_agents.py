@@ -126,7 +126,7 @@ class TestCompoundAgent:
         response = agent.process_query(query)
         
         assert response.agent_used == "Compound Intelligence Agent"
-        assert "not found" in response.answer.lower()
+        assert "couldn't find" in response.answer.lower()
         assert response.uncertainty == "High"
     
     def test_target_protein_query(self, setup_database):
@@ -184,7 +184,7 @@ class TestSafetyAgent:
         response = agent.process_query(query)
         
         assert response.agent_used == "Safety Intelligence Agent"
-        assert "not found" in response.answer.lower()
+        assert "couldn't find" in response.answer.lower()
         assert response.uncertainty == "High"
     
     def test_triage_query(self, setup_database):

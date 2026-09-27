@@ -1,66 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import QueryInterface from './components/QueryInterface';
 import ResultsDisplay from './components/ResultsDisplay';
-import AgentStatus from './components/AgentStatus';
 import Header from './components/Header';
 import { apiService } from './services/api';
-import { AppState } from './types';
+import { QueryResponse } from './types';
 import './App.css';
 
 function App() {
-  const [state, setState] = useState<AppState>({
-    query: '',
-    results: null,
-    loading: false,
-    error: null,
-    agentStatus: 'Ready',
-    processingTime: 0,
-  });
-
-  const [systemStatus, setSystemStatus] = useState<any>(null);
-
-  useEffect(() => {
-    // Check system health on mount
-    apiService.healthCheck()
-      .then(setSystemStatus)
-      .catch(err => console.error('Health check failed:', err));
-  }, []);
+  const [results, setResults] = useState<QueryResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleQuery = async (query: string) => {
-    setState(prev => ({
-      ...prev,
-      query,
-      loading: true,
-      error: null,
-      results: null,
-      agentStatus: 'Processing...',
-    }));
+    setLoading(true);
+    setError(null);
+    setResults(null);
 
     try {
-      const startTime = Date.now();
       const response = await apiService.processQuery(query);
-      const processingTime = Date.now() - startTime;
-
-      setState(prev => ({
-        ...prev,
-        results: response,
-        loading: false,
-        agentStatus: response.agent_used,
-        processingTime,
-      }));
+      setResults(response);
+      setLoading(false);
     } catch (error) {
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: error instanceof Error ? error.message : 'An error occurred',
-        agentStatus: 'Error',
-      }));
+      setLoading(false);
+      setError(error instanceof Error ? error.message : 'An error occurred');
     }
   };
 
   return (
     <div className="app">
-      <Header systemStatus={systemStatus} />
+      <Header />
       
       <main className="main-content">
         <div className="container">
@@ -72,20 +40,14 @@ function App() {
             </p>
           </div>
 
-          <AgentStatus 
-            status={state.agentStatus}
-            processingTime={state.processingTime}
-            systemStatus={systemStatus}
-          />
-
           <QueryInterface 
             onQuery={handleQuery}
-            loading={state.loading}
-            error={state.error}
+            loading={loading}
+            error={error}
           />
 
-          {state.results && (
-            <ResultsDisplay results={state.results} />
+          {results && (
+            <ResultsDisplay results={results} />
           )}
         </div>
       </main>
